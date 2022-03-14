@@ -109,6 +109,11 @@ namespace LogAnalytics_CustomDataProvider
                 webRequest.ContentType = "application/json";
 
                 var accessToken = AzureActiveDirectory.ClientCredentialsFlow(localPluginContext).access_token;
+                if (accessToken == null)
+                {
+                    return;
+                }
+
                 webRequest.Headers.Add("Bearer", accessToken);
 
                 using (var s = webRequest.GetResponse().GetResponseStream())

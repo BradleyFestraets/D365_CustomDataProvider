@@ -27,10 +27,10 @@ namespace LogAnalytics_CustomDataProvider.Models
 
         public Entity ToEntity(ITracingService tracingService)
         {
-            Entity entity = new Entity("bf_Log");
+            Entity entity = new Entity("bf_log");
 
             // Map data to entity
-            entity["bf_CustomAuditLogId"] = uniqueIdentifier;
+            entity["bf_logid"] = uniqueIdentifier;
             entity["bf_name"] = name;
             entity["bf_computer"] = computer;
             entity["bf_managementgroupname"] = managementgroupname;

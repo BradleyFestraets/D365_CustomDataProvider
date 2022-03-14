@@ -92,15 +92,18 @@ namespace LogAnalytics_CustomDataProvider
         {
             Entity entity = null;
 
-            localPluginContext.TracingService.Trace("Starting to retrieve SpaceX Launch data");
+            localPluginContext.TracingService.Trace("Starting to retrieve Log data");
 
             try
             {
+                var workspace = new Guid("bd254549-18ed-4039-9b23-1b8a3d2a27f9");
+                var table = "SVCAuditLogs_CL";
+                var uniqueIdentifier = "Id_g";
                 var guid = localPluginContext.PluginExecutionContext.PrimaryEntityId;
                 localPluginContext.TracingService.Trace("Guid: {0}", guid);
 
                 // Now we know which Log to search for, let us go and do the search
-                var webRequest = WebRequest.Create($"\nhttps://api.spacexdata.com/v3/launches/{guid}?filter=rocket/rocket_name,flight_number,mission_name,launch_year,launch_date_utc,links,details") as HttpWebRequest;
+                var webRequest = WebRequest.Create($"\nhttps://api.loganalytics.io/v1/workspaces/{workspace}/query/?query={table} | where {uniqueIdentifier} == \"{guid}\"") as HttpWebRequest;
 
                 if (webRequest != null)
                 {

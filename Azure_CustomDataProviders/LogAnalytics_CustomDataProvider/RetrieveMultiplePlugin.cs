@@ -96,8 +96,10 @@ namespace LogAnalytics_CustomDataProvider
 
             try
             {
+                var workspace = new Guid("bd254549-18ed-4039-9b23-1b8a3d2a27f9");
+                var table = "SVCAuditLogs_CL";
                 // Get data from Audit Logs
-                var webRequest = WebRequest.Create("https://api.spacexdata.com/v3/launches?filter=rocket/rocket_name,flight_number,mission_name,launch_year,launch_date_utc,links,details") as HttpWebRequest;
+                var webRequest = WebRequest.Create($"\nhttps://api.loganalytics.io/v1/workspaces/{workspace}/query/?query={table}") as HttpWebRequest;
 
                 if (webRequest == null)
                 {

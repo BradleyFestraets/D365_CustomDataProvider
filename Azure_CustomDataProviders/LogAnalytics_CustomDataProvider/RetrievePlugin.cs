@@ -1,7 +1,11 @@
-﻿using Microsoft.Xrm.Sdk;
+﻿using LogAnalytics_CustomDataProvider.Models;
+using Microsoft.Xrm.Sdk;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
@@ -81,12 +85,49 @@ namespace LogAnalytics_CustomDataProvider
         }
 
         /// <summary>
-        /// Placeholder for a custom plug-in implementation. 
+        /// Retrieves Log from Azure Log Analytics
         /// </summary>
         /// <param name="localPluginContext">Context for the current plug-in.</param>
         protected virtual void ExecuteCdsPlugin(ILocalPluginContext localPluginContext)
         {
-            // Do nothing. 
+            Entity entity = null;
+
+            localPluginContext.TracingService.Trace("Starting to retrieve SpaceX Launch data");
+
+            try
+            {
+                var guid = localPluginContext.PluginExecutionContext.PrimaryEntityId;
+                localPluginContext.TracingService.Trace("Guid: {0}", guid);
+
+                // Now we know which Log to search for, let us go and do the search
+                var webRequest = WebRequest.Create($"\nhttps://api.spacexdata.com/v3/launches/{guid}?filter=rocket/rocket_name,flight_number,mission_name,launch_year,launch_date_utc,links,details") as HttpWebRequest;
+
+                if (webRequest != null)
+                {
+                    webRequest.ContentType = "application/json";
+                    using (var s = webRequest.GetResponse().GetResponseStream())
+                    {
+                        using (var sr = new StreamReader(s))
+                        {
+                            var logAsJson = sr.ReadToEnd();
+                            localPluginContext.TracingService.Trace("Response: {0}", logAsJson);
+
+                            var log = JsonConvert.DeserializeObject<Log>(logAsJson);
+                            if (log != null)
+                            {
+                                entity = log.ToEntity(localPluginContext.TracingService);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                localPluginContext.TracingService.Trace("Exception with message: {0}", e.Message);
+            }
+
+            // Set output parameter
+            localPluginContext.PluginExecutionContext.OutputParameters["BusinessEntity"] = entity;
         }
     }
 }

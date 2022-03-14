@@ -1,7 +1,11 @@
-﻿using Microsoft.Xrm.Sdk;
+﻿using LogAnalytics_CustomDataProvider.Models;
+using Microsoft.Xrm.Sdk;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
@@ -81,13 +85,45 @@ namespace LogAnalytics_CustomDataProvider
         }
 
         /// <summary>
-        /// Placeholder for a custom plug-in implementation. 
+        /// Retrieves Logs from Azure Log Analytics
         /// </summary>
         /// <param name="localPluginContext">Context for the current plug-in.</param>
         protected virtual void ExecuteCdsPlugin(ILocalPluginContext localPluginContext)
         {
-            // Do nothing. 
-        }
+            EntityCollection ec = new EntityCollection();
 
+            localPluginContext.TracingService.Trace("Starting to retrieve Audit Logs");
+
+            try
+            {
+                // Get data from Audit Logs
+                var webRequest = WebRequest.Create("https://api.spacexdata.com/v3/launches?filter=rocket/rocket_name,flight_number,mission_name,launch_year,launch_date_utc,links,details") as HttpWebRequest;
+
+                if (webRequest == null)
+                {
+                    return;
+                }
+
+                webRequest.ContentType = "application/json";
+
+                using (var s = webRequest.GetResponse().GetResponseStream())
+                {
+                    using (var sr = new StreamReader(s))
+                    {
+                        var logsAsJson = sr.ReadToEnd();
+                        var logs = JsonConvert.DeserializeObject<List<Log>>(logsAsJson);
+                        localPluginContext.TracingService.Trace("Total number of logs: {0}", logs.Count);
+                        ec.Entities.AddRange(logs.Select(l => l.ToEntity(localPluginContext.TracingService)));
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                localPluginContext.TracingService.Trace("Exception with message: {0}", e.Message);
+            }
+
+            // Set output parameter
+            localPluginContext.PluginExecutionContext.OutputParameters["BusinessEntityCollection"] = ec;
+        }
     }
 }

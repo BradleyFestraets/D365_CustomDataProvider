@@ -75,7 +75,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AzureActiveDirectory.cs" />
     <Compile Include="CDPHelper.cs" />
+    <Compile Include="Models\AzureADToken.cs" />
     <Compile Include="Models\Log.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PluginBase.cs" />
